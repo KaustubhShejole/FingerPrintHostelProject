@@ -1,0 +1,205 @@
+[
+    {
+        "id": "afec3cf4e98581db",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "932323f61db065ca",
+        "type": "websocket-listener",
+        "path": "/test2/hb6",
+        "wholemsg": "true"
+    },
+    {
+        "id": "cc3c056fd47e9216",
+        "type": "inject",
+        "z": "afec3cf4e98581db",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "999",
+        "payloadType": "num",
+        "x": 210,
+        "y": 160,
+        "wires": [
+            [
+                "77cc8dbb6db801ab",
+                "0f67b3726bad64c7"
+            ]
+        ]
+    },
+    {
+        "id": "77cc8dbb6db801ab",
+        "type": "function",
+        "z": "afec3cf4e98581db",
+        "d": true,
+        "name": "Init",
+        "func": "const fs = global.get('fs'); // Access the fs module from the global context\n\nfunction createFingerDataJSON() {\n  const fingerData = {};\n\n  // Create the JSON structure for 1000 finger IDs with \"OUT\" status\n  for (let i = 1; i <= 1000; i++) {\n    fingerData[i] = { status: \"OUT\" };\n  }\n\n  // Convert the data to a JSON string\n  const jsonData = JSON.stringify(fingerData, null, 2);\n\n  // Specify the file path\n  const filePath = 'fingerData.json';\n\n  // Write the JSON data to a file\n  fs.writeFileSync(filePath, jsonData);\n\n  console.log(\"JSON file 'fingerData.json' created.\");\n}\n\n// Call the function to create the JSON file\ncreateFingerDataJSON();\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 370,
+        "y": 200,
+        "wires": [
+            [
+                "64c2dca947b715d9"
+            ]
+        ]
+    },
+    {
+        "id": "64c2dca947b715d9",
+        "type": "debug",
+        "z": "afec3cf4e98581db",
+        "name": "debug 1",
+        "active": true,
+        "tosidebar": true,
+        "console": true,
+        "tostatus": true,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "topic",
+        "statusType": "auto",
+        "x": 570,
+        "y": 160,
+        "wires": []
+    },
+    {
+        "id": "0f67b3726bad64c7",
+        "type": "function",
+        "z": "afec3cf4e98581db",
+        "name": "getstatus",
+        "func": "const fs = global.get('fs'); // Access the fs module from the global context\n\nfunction toggleFingerStatus(requestedId) {\n  // Read the JSON file\n  const filePath = 'fingerData.json'; // Update with your actual file path\n  let fingerData = JSON.parse(fs.readFileSync(filePath, 'utf8'));\n\n  // Check if the requested ID is within the valid range\n  if (requestedId >= 1 && requestedId <= 1000) {\n    const status = fingerData[requestedId] && fingerData[requestedId].status;\n\n    if (status !== undefined) {\n      // Toggle the status\n\n      const newStatus = status === 'IN' ? 'OUT' : 'IN';\n\n\n      var r1;\n      if (requestedId % 2 == 0) {\n        r1 = requestedId - 1;\n      } else {\n        r1 = requestedId + 1;\n      }\n      // Update the status in the JSON data\n      fingerData[requestedId].status = newStatus;\n      fingerData[r1].status = newStatus;\n      // Write the updated JSON data back to the file\n      fs.writeFileSync(filePath, JSON.stringify(fingerData, null, 2));\n\n      return { payload: newStatus };\n    } else {\n      return { payload: 'ID not found' };\n    }\n  } else {\n    return { payload: 'Invalid ID' };\n  }\n}\n\n// Call the function to toggle the status for a specific ID\nconst requestedId = msg.payload; // Replace with the ID you want to toggle\nconst result = toggleFingerStatus(requestedId);\nconst payloadValue = result.payload; // Extract the payload property from the result object\nlet payloadString = payloadValue.toString(); // Convert the payload to a string\n// if (requestedId == 999) {\n//   payloadString = \"Admin\";\n// }\nmsg.url = \"https://script.google.com/macros/s/AKfycby8nGtdMiMHBfUleC68OC4it8kDI5dQIe9acqcl_njOb2ve3dwShpie-mbfkmgsL4YUEw/exec?fingerid=\" + requestedId + \"&&stat=\" + payloadString;\n// return msg;\nconsole.log(msg.url);\nconsole.log(payloadString)\nmsg.payload = payloadValue\nreturn msg; // Return the result to be used in your Node-RED flow\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 380,
+        "y": 340,
+        "wires": [
+            [
+                "64c2dca947b715d9",
+                "1cbb68b35bf46e9d",
+                "8711ca1647399954",
+                "36b3fe65677dd628"
+            ]
+        ]
+    },
+    {
+        "id": "1cbb68b35bf46e9d",
+        "type": "http request",
+        "z": "afec3cf4e98581db",
+        "name": "",
+        "method": "GET",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "",
+        "senderr": false,
+        "headers": [],
+        "x": 630,
+        "y": 260,
+        "wires": [
+            [
+                "64c2dca947b715d9"
+            ]
+        ]
+    },
+    {
+        "id": "f00695f044d228da",
+        "type": "websocket in",
+        "z": "afec3cf4e98581db",
+        "name": "",
+        "server": "932323f61db065ca",
+        "client": "",
+        "x": 190,
+        "y": 260,
+        "wires": [
+            [
+                "0f67b3726bad64c7",
+                "64c2dca947b715d9"
+            ]
+        ]
+    },
+    {
+        "id": "9b0b43685e3c91c3",
+        "type": "websocket out",
+        "z": "afec3cf4e98581db",
+        "name": "",
+        "server": "932323f61db065ca",
+        "client": "",
+        "x": 700,
+        "y": 340,
+        "wires": []
+    },
+    {
+        "id": "8711ca1647399954",
+        "type": "debug",
+        "z": "afec3cf4e98581db",
+        "name": "debug 2",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 680,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "36b3fe65677dd628",
+        "type": "function",
+        "z": "afec3cf4e98581db",
+        "name": "function 1",
+        "func": "const payloadValue = msg\nmsg.payload= payloadValue.payload\nmsg.url = 0\n\n// Return the modified message\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 440,
+        "wires": [
+            [
+                "9b0b43685e3c91c3"
+            ]
+        ]
+    },
+    {
+        "id": "da565f355b05653f",
+        "type": "comment",
+        "z": "afec3cf4e98581db",
+        "name": "",
+        "info": "# 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  github token\n\n172.25.160.11:8788 ~ severs settings\n172.25.160.11:9022 ~ firmware upload\npasswd Ayushnaphade1@\nuser spark //for firmware update\nuser admin for nodered",
+        "x": 200,
+        "y": 400,
+        "wires": []
+    }
+]
